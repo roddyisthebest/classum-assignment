@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, FlatList } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  FlatList,
+  Dimensions,
+} from 'react-native';
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
 import Post from '../components/Post';
 
@@ -25,7 +32,7 @@ const Community = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#EFF0F4',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
