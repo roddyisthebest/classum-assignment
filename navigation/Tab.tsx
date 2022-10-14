@@ -22,7 +22,7 @@ const Tab = () => {
         tabBarActiveTintColor: 'black',
         tabBarInactiveTintColor: 'black',
         tabBarStyle: {
-          borderTopColor: '#BDC5CD',
+          borderTopColor: '#dbdbdb',
           borderTopWidth: 0.5,
         },
         headerLeftContainerStyle: {
