@@ -9,20 +9,33 @@ import {
 } from 'react-native';
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
 import Post from '../components/Post';
+import { useSelector } from 'react-redux';
 
 import Upload from '../components/Upload';
+import { initialStateProps } from '../store/slice';
+import { PostDataType } from '../types';
 const Community = ({
   navigation: { navigate },
 }: {
   navigation: { navigate: Function };
 }) => {
-  const [data, setData] = useState([
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-  ]);
-  const renderItem = () => <Post />;
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: PostDataType;
+    index: number;
+  }) => <Post data={item} index={index} />;
+  const { posts } = useSelector((state: initialStateProps) => ({
+    posts: state.posts,
+  }));
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList renderItem={renderItem} data={data} />
+      <FlatList
+        renderItem={renderItem}
+        data={posts}
+        keyExtractor={(item, index) => index.toString()}
+      />
 
       <Upload></Upload>
     </SafeAreaView>

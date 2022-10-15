@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import {
   Dimensions,
   StyleSheet,
@@ -9,12 +9,40 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { initialStateProps, setInteration } from '../store/slice';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { PostDataType, FileType } from '../types';
 
-const Post = () => {
+const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
+  const dispatch = useDispatch();
+  const name = useSelector((state: initialStateProps) => state.name);
+  const [clap, setClap] = useState<boolean>(false);
+  const [interest, setInterest] = useState<boolean>(false);
+  const [height, setHeight] = useState<number>(0);
+  useEffect(() => {
+    const isThere = data.interest.find((element) => element === name);
+    setInterest(isThere ? true : false);
+  }, [data.interest]);
+
+  useEffect(() => {
+    const isThere = data.clap.find((element) => element === name);
+    setClap(isThere ? true : false);
+  }, [data.clap]);
+
+  useEffect(() => {
+    if (data.files.length === 1) {
+      setHeight(130);
+    } else if (data.files.length === 2) {
+      setHeight(150);
+    } else {
+      setHeight(105);
+    }
+  }, [data.files]);
+
   return (
     <View style={styles.containerWrapper}>
-      <Pressable style={styles.container}>
+      <Pressable style={styles.container} onPress={() => {}}>
         <View style={styles.userImageWrapper}>
           <ImageBackground
             source={{
@@ -32,20 +60,72 @@ const Post = () => {
           <View style={styles.spot}></View>
           <Text style={styles.headerText}>2 hours ago</Text>
         </View>
+        {data.title.length !== 0 ? (
+          <TextInput
+            value={data.title}
+            editable={false}
+            style={styles.headerInput}
+          ></TextInput>
+        ) : null}
+
         <TextInput
-          value={'테스트'}
-          editable={false}
-          style={styles.headerInput}
-        ></TextInput>
-        <TextInput
-          value={'니가 싫어 싫어 니가 싫어 싫어'}
+          value={data.contents}
           multiline
           editable={false}
           style={styles.headerContents}
         ></TextInput>
+        {data.files.length !== 0 ? (
+          <View
+            style={{
+              height,
+              marginTop: 15,
+              marginBottom: 5,
+              flexDirection: 'row',
+            }}
+          >
+            {data.files.map((file: FileType, index: number) => {
+              return index < 3 ? (
+                <TouchableOpacity
+                  style={{ flex: 1, marginLeft: index !== 0 ? 10 : 0 }}
+                  key={index}
+                >
+                  {index === 2 ? (
+                    <View style={styles.imagePlusBackground}>
+                      <Text style={styles.imagePlusText}>
+                        +{data.files.length - 2}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {file.type === 'success' ? (
+                    <View style={styles.fileItem}>
+                      <Text style={styles.flieTitleText}>
+                        {(file.name?.length as number) > 7
+                          ? file.name?.substring(0, 8) + '...'
+                          : file.name}
+                      </Text>
+                      <Text style={styles.fileSubText}>
+                        {file.mimeType.split('/')[1]} ·{' '}
+                        {(file.size / 1000000).toFixed(1)}MB
+                      </Text>
+                    </View>
+                  ) : (
+                    <ImageBackground
+                      source={{
+                        uri: file.uri,
+                      }}
+                      borderRadius={8}
+                      resizeMode={'cover'}
+                      style={styles.imageItem}
+                    ></ImageBackground>
+                  )}
+                </TouchableOpacity>
+              ) : null;
+            })}
+          </View>
+        ) : null}
         <View style={styles.tagWrapper}>
           <View style={styles.tagItem}>
-            <Text style={styles.tagText}>No.9</Text>
+            <Text style={styles.tagText}>No.{index + 1}</Text>
           </View>
           <View style={styles.tagItem}>
             <Text style={styles.tagText}># 과제</Text>
@@ -56,28 +136,54 @@ const Post = () => {
         </View>
       </Pressable>
       <View style={styles.interactionWrapper}>
-        <TouchableOpacity style={styles.interactionItem}>
+        <TouchableOpacity
+          style={styles.interactionItem}
+          onPress={() => {
+            dispatch(setInteration({ idx: index, key: 'interest', name }));
+          }}
+        >
           <Icon
-            name={'happy'}
+            name={'heart'}
             size={18}
-            color="#E2E1E6"
+            color={interest ? '#ff1a1a' : '#E2E1E6'}
             style={{ marginRight: 5 }}
           />
-          <Text style={styles.interactionText}>관심있어요 0</Text>
+          <Text
+            style={
+              interest
+                ? styles.interactionTextWithExistence
+                : styles.interactionTextWithNoExistence
+            }
+          >
+            관심있어요 {data.interest.length}
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.interactionItem}>
+        <TouchableOpacity
+          onPress={() => {
+            dispatch(setInteration({ idx: index, key: 'clap', name }));
+          }}
+          style={styles.interactionItem}
+        >
           <Icon
             name={'hand-right'}
             size={18}
-            color="#E2E1E6"
+            color={clap ? '#fbceb1' : '#E2E1E6'}
             style={{ marginRight: 5 }}
           />
-          <Text style={styles.interactionText}>짝짝 0</Text>
+          <Text
+            style={
+              clap
+                ? styles.interactionTextWithExistence
+                : styles.interactionTextWithNoExistence
+            }
+          >
+            짝짝 {data.clap.length}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   containerWrapper: {
@@ -147,10 +253,10 @@ const styles = StyleSheet.create({
   tagWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginTop: 15,
   },
   tagItem: {
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 15,
     backgroundColor: '#EFF0F4',
@@ -161,7 +267,7 @@ const styles = StyleSheet.create({
     color: '#737279',
   },
   chatWrapper: {
-    // marginTop: 10,
+    marginTop: 25,
   },
   chatText: {
     color: '#8E8F91',
@@ -189,10 +295,52 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  interactionText: {
+  interactionTextWithExistence: {
+    color: 'black',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  interactionTextWithNoExistence: {
     color: '#b8b6bd',
     fontSize: 13,
     fontWeight: '700',
+  },
+  imageItem: {
+    flex: 1,
+  },
+  fileItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8F8F8',
+    borderColor: '#E0E1E5',
+    borderWidth: 1.5,
+    borderRadius: 8,
+  },
+  flieTitleText: {
+    color: 'black',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  fileSubText: {
+    fontSize: 7,
+    fontWeight: '600',
+    color: 'gray',
+  },
+  imagePlusBackground: {
+    position: 'absolute',
+    height: '100%',
+    width: '100%',
+    backgroundColor: '#00000078',
+    zIndex: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imagePlusText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
   },
 });
 

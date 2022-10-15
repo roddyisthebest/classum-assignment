@@ -12,13 +12,10 @@ export type FileType = {
   mimeType: string;
 };
 
-export type ImageType = {
-  assetId: string | null;
-  fileName: string | null;
-  fileSize: number;
-  height: number;
-  type: 'image' | 'video' | 'success';
-  uri: string;
-  width: number;
-  cancelled: boolean;
+export type PostDataType = {
+  title: string;
+  contents: string;
+  files: FileType[] | any[];
+  interest: string[];
+  clap: string[];
 };

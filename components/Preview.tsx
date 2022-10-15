@@ -8,45 +8,64 @@ import {
 } from 'react-native';
 import { memo } from 'react';
 import { FileType } from '../types';
-import { ImageType } from '../types';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const Preview = memo(({ data }: { data: FileType }) => {
-  return data.type === 'success' ? (
-    <View style={styles.fileWrapper}>
-      <View style={styles.fileLeftSide}>
-        <Icon name="document-attach-outline" color="black" size={20} />
+const Preview = memo(
+  ({
+    data,
+    deleteFile,
+    index,
+  }: {
+    data: FileType;
+    deleteFile: Function;
+    index: number;
+  }) => {
+    return data.type === 'success' ? (
+      <View style={styles.fileWrapper}>
+        <View style={styles.fileLeftSide}>
+          <Icon name="document-attach-outline" color="black" size={20} />
+        </View>
+        <View style={styles.fileRightSide}>
+          <Text style={styles.fileTitle}>
+            {(data.name?.length as number) > 7
+              ? data.name?.substring(0, 8) + '...'
+              : data.name}
+          </Text>
+          <Text style={styles.fileType}>
+            {data.mimeType.split('/')[1]} · {(data.size / 1000000).toFixed(1)}MB
+          </Text>
+        </View>
+        <Pressable
+          style={styles.deleteBtn}
+          onPress={() => {
+            deleteFile(index);
+          }}
+        >
+          <Icon name="close-outline" color="white" size={10} />
+        </Pressable>
       </View>
-      <View style={styles.fileRightSide}>
-        <Text style={styles.fileTitle}>
-          {(data.name?.length as number) > 7
-            ? data.name?.substring(0, 8) + '...'
-            : data.name}
-        </Text>
-        <Text style={styles.fileType}>
-          {data.mimeType.split('/')[1]} · {(data.size / 1000000).toFixed(1)}MB
-        </Text>
+    ) : (
+      <View style={styles.imageWrapper}>
+        <Pressable
+          style={styles.deleteBtn}
+          onPress={() => {
+            deleteFile(index);
+          }}
+        >
+          <Icon name="close-outline" color="white" size={10} />
+        </Pressable>
+        <ImageBackground
+          source={{
+            uri: data.uri,
+          }}
+          style={styles.image}
+          resizeMode="cover"
+          borderRadius={5}
+        ></ImageBackground>
       </View>
-      <Pressable style={styles.deleteBtn}>
-        <Icon name="close-outline" color="white" size={10} />
-      </Pressable>
-    </View>
-  ) : (
-    <View style={styles.imageWrapper}>
-      <Pressable style={styles.deleteBtn}>
-        <Icon name="close-outline" color="white" size={10} />
-      </Pressable>
-      <ImageBackground
-        source={{
-          uri: data.uri,
-        }}
-        style={styles.image}
-        resizeMode="cover"
-        borderRadius={5}
-      ></ImageBackground>
-    </View>
-  );
-});
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   container: {

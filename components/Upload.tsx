@@ -10,47 +10,79 @@ import {
   Platform,
   Image,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
-import { ImageType } from '../types';
 import { FileType } from '../types';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-
+import { useSelector, useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Preview from './Preview';
+import { addPost, initialStateProps } from '../store/slice';
 
 const Upload = () => {
+  const dispatch = useDispatch();
+  const { name } = useSelector((state: initialStateProps) => ({
+    name: state.name,
+  }));
   const [clicked, setClicked] = useState(false);
   const [upload, setUpload] = useState(false);
-  //   const [images, setImages] = useState<ImageType[]>([]);
   const [files, setFiles] = useState<FileType[]>([]);
+  const [title, setTitle] = useState<string>('');
+  const [contents, setContents] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const renderItem = ({ item }: { item: FileType }) => <Preview data={item} />;
+  const renderItem = ({ item, index }: { item: FileType; index: number }) => (
+    <Preview data={item} key={index} index={index} deleteFile={deleteFile} />
+  );
 
   const uploadImage = useCallback(async () => {
-    let result: any = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      aspect: [4, 3],
-      quality: 1,
-      allowsMultipleSelection: true,
-    });
-    if (!result.cancelled) {
-      setFiles((prev) => [...prev, ...result.selected]);
+    try {
+      setLoading(true);
+      let result: any = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        aspect: [4, 3],
+        quality: 1,
+        allowsMultipleSelection: true,
+      });
+      if (!result.cancelled) {
+        setFiles((prev) => [...prev, ...result.selected]);
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const uploadFile = useCallback(async () => {
-    let result: any = await DocumentPicker.getDocumentAsync({});
+    try {
+      setLoading(true);
 
-    if (result.type === 'success') {
-      setFiles((prev) => [...prev, ...[result]]);
-      console.log(result);
+      let result: any = await DocumentPicker.getDocumentAsync({});
+
+      if (result.type === 'success') {
+        setFiles((prev) => [...prev, ...[result]]);
+        console.log(result);
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  //   useEffect(() => {
-  //     console.log(images);
-  //   }, [images]);
+  const deleteFile = useCallback((idx: number) => {
+    setFiles((prev) => prev.filter((file, index) => index !== idx));
+  }, []);
+
+  const reset = useCallback(() => {
+    setClicked(false);
+    setFiles([]);
+    setUpload(false);
+    setTitle('');
+    setContents('');
+  }, []);
 
   return !clicked ? (
     <Pressable
@@ -74,14 +106,7 @@ const Upload = () => {
     </Pressable>
   ) : (
     <>
-      <Pressable
-        style={clickedStyles.bkgButton}
-        onPress={() => {
-          setClicked(false);
-          setFiles([]);
-          setUpload(false);
-        }}
-      ></Pressable>
+      <Pressable style={clickedStyles.bkgButton} onPress={reset}></Pressable>
       <KeyboardAvoidingView
         style={clickedStyles.view}
         behavior={Platform.select({ ios: 'position', android: undefined })}
@@ -103,6 +128,8 @@ const Upload = () => {
             placeholder="제목 (선택)"
             placeholderTextColor="#86868E"
             style={clickedStyles.headerInput}
+            value={title}
+            onChangeText={(text) => setTitle(text)}
             autoFocus
           ></TextInput>
           <TextInput
@@ -110,17 +137,24 @@ const Upload = () => {
             placeholderTextColor="#86868E"
             style={clickedStyles.textInput}
             autoFocus
+            value={contents}
+            onChangeText={(text) => setContents(text)}
             multiline
             numberOfLines={10}
           ></TextInput>
-          {files.length ? (
+          {files.length || loading ? (
             <View style={clickedStyles.flatListWrapper}>
-              <FlatList
-                renderItem={renderItem}
-                data={files}
-                horizontal
-                ItemSeparatorComponent={() => <View style={{ width: 5 }} />}
-              ></FlatList>
+              {loading ? (
+                <ActivityIndicator color="#687684" size={30} />
+              ) : (
+                <FlatList
+                  renderItem={renderItem}
+                  data={files}
+                  horizontal
+                  keyExtractor={(item, index) => index.toString()}
+                  ItemSeparatorComponent={() => <View style={{ width: 5 }} />}
+                ></FlatList>
+              )}
             </View>
           ) : null}
 
@@ -153,7 +187,20 @@ const Upload = () => {
                 color="black"
               />
             </Pressable>
-            <Pressable>
+            <Pressable
+              onPress={() => {
+                dispatch(
+                  addPost({
+                    title,
+                    contents,
+                    files,
+                    interest: [name],
+                    clap: [name],
+                  })
+                );
+                reset();
+              }}
+            >
               <Icon name={'send'} size={20} color="#86868E" />
             </Pressable>
           </View>
@@ -241,7 +288,9 @@ const clickedStyles = StyleSheet.create({
     height: 50,
   },
   flatListWrapper: {
-    marginTop: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderColor: 'lightgray',
   },
 });
 
