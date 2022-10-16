@@ -19,3 +19,15 @@ export type PostDataType = {
   interest: string[];
   clap: string[];
 };
+
+export type UserDataType = {
+  name: string;
+  img: string;
+};
+
+export type ChatDataType = {
+  user: UserDataType;
+  type: 'text' | 'file' | 'images';
+  contents: string | string[] | { name: string; type: string; url: string };
+  createdAt: string;
+};

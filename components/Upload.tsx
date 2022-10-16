@@ -11,19 +11,30 @@ import {
   Image,
   FlatList,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 import { FileType } from '../types';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSelector, useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Preview from './Preview';
-import { addPost, initialStateProps } from '../store/slice';
+import { addChat, addPost, initialStateProps } from '../store/slice';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
-const Upload = () => {
+const Upload = ({ type }: { type: 'chat' | 'post' }) => {
+  const storage = getStorage();
+
   const dispatch = useDispatch();
-  const { name } = useSelector((state: initialStateProps) => ({
-    name: state.name,
+  const target = useRef<any>();
+  const headerHeight = useHeaderHeight();
+
+  const { user } = useSelector((state: initialStateProps) => ({
+    user: state.user,
   }));
   const [clicked, setClicked] = useState(false);
   const [upload, setUpload] = useState(false);
@@ -31,6 +42,10 @@ const Upload = () => {
   const [title, setTitle] = useState<string>('');
   const [contents, setContents] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    setClicked(type === 'chat');
+  }, [type]);
 
   const renderItem = ({ item, index }: { item: FileType; index: number }) => (
     <Preview data={item} key={index} index={index} deleteFile={deleteFile} />
@@ -76,12 +91,85 @@ const Upload = () => {
     setFiles((prev) => prev.filter((file, index) => index !== idx));
   }, []);
 
+  const upLoadToStorage = useCallback(async () => {
+    const imageUrls: any[] = [];
+    const fileUrls: any[] = [];
+
+    await Promise.all(
+      files.map(async (e) => {
+        const blob = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.onload = function () {
+            resolve(xhr.response);
+          };
+          xhr.onerror = function (e) {
+            console.log(e);
+            reject(new TypeError('Network request failed'));
+          };
+          xhr.responseType = 'blob';
+          xhr.open('GET', e.uri, true);
+          xhr.send(null);
+        });
+        const fileName = new Date().getTime().toString();
+        await uploadBytes(ref(storage, fileName), blob as any);
+        const url = await getDownloadURL(ref(storage, fileName));
+        if (e.type === 'success') {
+          fileUrls.push({
+            name: e.name,
+            type: e.mimeType,
+            url: url,
+            size: e.size,
+          });
+        } else {
+          imageUrls.push(url);
+        }
+        return new Promise((resolve, reject) => {
+          resolve('clear set urlLogic');
+        });
+      })
+    );
+    imageUrls.length !== 0 &&
+      (await addDoc(collection(db, 'chats'), {
+        user: {
+          name: user.name,
+          img: user.img,
+        },
+        contents: imageUrls,
+        type: 'images',
+        createdAt: new Date().getTime(),
+      }));
+
+    fileUrls.map(async (url) => {
+      await addDoc(collection(db, 'chats'), {
+        user: {
+          name: user.name,
+          img: user.img,
+        },
+        contents: url,
+        type: 'file',
+        createdAt: new Date().getTime(),
+      });
+    });
+
+    contents.length !== 0 &&
+      (await addDoc(collection(db, 'chats'), {
+        user: {
+          name: user.name,
+          img: user.img,
+        },
+        contents,
+        type: 'text',
+        createdAt: new Date().getTime(),
+      }));
+  }, [files, contents]);
+
   const reset = useCallback(() => {
-    setClicked(false);
+    type !== 'chat' && setClicked(false);
     setFiles([]);
     setUpload(false);
     setTitle('');
     setContents('');
+    Keyboard.dismiss();
   }, []);
 
   return !clicked ? (
@@ -93,7 +181,7 @@ const Upload = () => {
     >
       <Image
         source={{
-          uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
+          uri: user.img ? user.img : 'dummy',
         }}
         style={notClickedStyles.img}
       ></Image>
@@ -106,41 +194,57 @@ const Upload = () => {
     </Pressable>
   ) : (
     <>
-      <Pressable style={clickedStyles.bkgButton} onPress={reset}></Pressable>
+      {type !== 'chat' ? (
+        <Pressable style={clickedStyles.bkgButton} onPress={reset}></Pressable>
+      ) : null}
+
       <KeyboardAvoidingView
+        keyboardVerticalOffset={headerHeight}
         style={clickedStyles.view}
         behavior={Platform.select({ ios: 'position', android: undefined })}
       >
-        <View style={clickedStyles.container}>
+        <View
+          style={
+            type === 'chat'
+              ? clickedStyles.containerChat
+              : clickedStyles.containerPost
+          }
+        >
           <View style={clickedStyles.header}>
             <View style={clickedStyles.headerItem}>
               <Image
                 source={{
-                  uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
+                  uri: user.img ? user.img : 'dummy',
                 }}
                 style={clickedStyles.img}
               ></Image>
-              <Text style={clickedStyles.username}>배성연</Text>
+              <Text style={clickedStyles.username}>{user.name}</Text>
             </View>
           </View>
+          {type !== 'chat' ? (
+            <TextInput
+              placeholder="제목 (선택)"
+              placeholderTextColor="#86868E"
+              style={clickedStyles.headerInput}
+              value={title}
+              onChangeText={(text) => setTitle(text)}
+            ></TextInput>
+          ) : null}
 
-          <TextInput
-            placeholder="제목 (선택)"
-            placeholderTextColor="#86868E"
-            style={clickedStyles.headerInput}
-            value={title}
-            onChangeText={(text) => setTitle(text)}
-            autoFocus
-          ></TextInput>
           <TextInput
             placeholder="공유하고 싶은 생각이 있나요?"
             placeholderTextColor="#86868E"
-            style={clickedStyles.textInput}
-            autoFocus
+            style={
+              type === 'chat'
+                ? clickedStyles.textInputChat
+                : clickedStyles.textInputPost
+            }
+            autoFocus={type !== 'chat'}
             value={contents}
             onChangeText={(text) => setContents(text)}
-            multiline
+            multiline={type !== 'chat'}
             numberOfLines={10}
+            ref={target}
           ></TextInput>
           {files.length || loading ? (
             <View style={clickedStyles.flatListWrapper}>
@@ -188,16 +292,19 @@ const Upload = () => {
               />
             </Pressable>
             <Pressable
-              onPress={() => {
-                dispatch(
-                  addPost({
-                    title,
-                    contents,
-                    files,
-                    interest: [name],
-                    clap: [name],
-                  })
-                );
+              onPress={async () => {
+                type !== 'chat'
+                  ? dispatch(
+                      addPost({
+                        title,
+                        contents,
+                        files,
+                        interest: [user.name],
+                        clap: [user.name],
+                      })
+                    )
+                  : upLoadToStorage();
+
                 reset();
               }}
             >
@@ -211,18 +318,29 @@ const Upload = () => {
 };
 
 const clickedStyles = StyleSheet.create({
-  container: {
+  containerChat: {
+    width: Dimensions.get('window').width,
+    backgroundColor: 'white',
+    borderTopColor: 'lightgray',
+    borderTopWidth: 1,
+    paddingHorizontal: 20,
+    position: 'absolute',
+    bottom: -0,
+    paddingTop: 20,
+  },
+  containerPost: {
     width: Dimensions.get('window').width,
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
     position: 'absolute',
-    bottom: 0,
+    bottom: -0,
     paddingTop: 20,
   },
   view: {
     width: Dimensions.get('window').width,
+    zIndex: 100,
   },
   bkgButton: {
     flex: 1,
@@ -230,6 +348,7 @@ const clickedStyles = StyleSheet.create({
     height: Dimensions.get('window').height,
     backgroundColor: '#c9cdd6bc',
     position: 'absolute',
+    zIndex: 100,
   },
   header: {
     flexDirection: 'row',
@@ -251,14 +370,24 @@ const clickedStyles = StyleSheet.create({
     fontSize: 15,
     marginTop: 13.5,
   },
-  textInput: {
+  textInputChat: {
     fontWeight: '200',
     fontSize: 15,
     marginTop: 13.5,
-    height: 100,
+    paddingBottom: 10,
     borderBottomColor: 'lightgray',
     borderBottomWidth: 1,
     textAlignVertical: 'top',
+  },
+
+  textInputPost: {
+    fontWeight: '200',
+    fontSize: 15,
+    marginTop: 13.5,
+    borderBottomColor: 'lightgray',
+    borderBottomWidth: 1,
+    textAlignVertical: 'top',
+    height: 80,
   },
   img: {
     width: 30,

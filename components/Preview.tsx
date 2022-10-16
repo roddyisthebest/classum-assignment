@@ -32,7 +32,7 @@ const Preview = memo(
               : data.name}
           </Text>
           <Text style={styles.fileType}>
-            {data.mimeType.split('/')[1]} · {(data.size / 1000000).toFixed(1)}MB
+            {data.mimeType.slice(0, 8)} · {(data.size / 1000000).toFixed(1)}MB
           </Text>
         </View>
         <Pressable

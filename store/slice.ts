@@ -1,97 +1,87 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { PostDataType } from '../types/index';
+import { PostDataType, ChatDataType } from '../types/index';
 
 export type initialStateProps = {
-  name: string;
+  user: {
+    name: string;
+    img: string;
+  };
   posts: PostDataType[];
-  chats: any[];
+  chats: ChatDataType[];
 };
 
 const { actions, reducer } = createSlice({
   name: 'store',
   initialState: {
-    name: 'seong-yeon',
+    user: {
+      name: '',
+      img: '',
+    },
     posts: [
-      // {
-      //   title: '',
-      //   contents: '꽃길만 걷게 해줄게',
-      //   files: [
-      //     {
-      //       size: 10000,
-      //       uri: 'https://lh5.googleusercontent.com/p/AF1QipNnvXr1ejUm7zLvjHqbSaHIhDpr-3XiE8kMI2Nv=w408-h306-k-no',
-      //     },
-      //     {
-      //       size: 100,
-      //       uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
-      //     },
-      //   ],
-      //   interest: ['seong-yeon', 'roddy'],
-      //   clap: [],
-      // },
-      // {
-      //   title: '테스트',
-      //   contents: '꽃길만 걷게 해줄게',
-      //   files: [
-      //     {
-      //       size: 100,
-      //       uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
-      //     },
-      //   ],
-      //   interest: ['seong-yeon'],
-      //   clap: ['seong-yeon'],
-      // },
-      // {
-      //   title: '테스트',
-      //   contents: '꽃길만 걷게 해줄게',
-      //   files: [
-      //     {
-      //       size: 100,
-      //       uri: 'https://imgnn.seoul.co.kr/img/upload/2013/05/05/SSI_20130505112323_V.jpg',
-      //     },
-      //     {
-      //       size: 10000,
-      //       uri: 'https://lh5.googleusercontent.com/p/AF1QipNnvXr1ejUm7zLvjHqbSaHIhDpr-3XiE8kMI2Nv=w408-h306-k-no',
-      //     },
-      //     {
-      //       size: 100,
-      //       uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
-      //     },
-      //   ],
-      //   interest: ['seong-yeon'],
-      //   clap: ['seong-yeon'],
-      // },
-      // {
-      //   title: '테스트',
-      //   contents: '꽃길만 걷게 해줄게',
-      //   files: [
-      //     {
-      //       size: 100,
-      //       uri: 'https://imgnn.seoul.co.kr/img/upload/2013/05/05/SSI_20130505112323_V.jpg',
-      //     },
-      //     {
-      //       size: 10000,
-      //       uri: 'https://lh5.googleusercontent.com/p/AF1QipNnvXr1ejUm7zLvjHqbSaHIhDpr-3XiE8kMI2Nv=w408-h306-k-no',
-      //     },
-      //     {
-      //       size: 100,
-      //       uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
-      //     },
-      //     {
-      //       size: 100,
-      //       uri: 'https://imgnn.seoul.co.kr/img/upload/2013/05/05/SSI_20130505112323_V.jpg',
-      //     },
-      //     {
-      //       size: 10000,
-      //       uri: 'https://lh5.googleusercontent.com/p/AF1QipNnvXr1ejUm7zLvjHqbSaHIhDpr-3XiE8kMI2Nv=w408-h306-k-no',
-      //     },
-      //     {
-      //       size: 100,
-      //       uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
-      //     },
-      //   ],
-      //   interest: ['seong-yeon'],
-      //   clap: ['seong-yeon'],
-      // },
+      {
+        title: '테스트',
+        contents: '꽃길만 걷게 해줄게',
+        files: [
+          {
+            size: 100,
+            uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
+          },
+        ],
+        interest: ['seong-yeon'],
+        clap: ['seong-yeon'],
+      },
+      {
+        title: '테스트',
+        contents: '꽃길만 걷게 해줄게',
+        files: [
+          {
+            size: 100,
+            uri: 'https://imgnn.seoul.co.kr/img/upload/2013/05/05/SSI_20130505112323_V.jpg',
+          },
+          {
+            size: 10000,
+            uri: 'https://lh5.googleusercontent.com/p/AF1QipNnvXr1ejUm7zLvjHqbSaHIhDpr-3XiE8kMI2Nv=w408-h306-k-no',
+          },
+          {
+            size: 100,
+            uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
+          },
+        ],
+        interest: ['seong-yeon'],
+        clap: ['seong-yeon'],
+      },
+      {
+        title: '테스트',
+        contents: '꽃길만 걷게 해줄게',
+        files: [
+          {
+            size: 100,
+            uri: 'https://imgnn.seoul.co.kr/img/upload/2013/05/05/SSI_20130505112323_V.jpg',
+          },
+          {
+            size: 10000,
+            uri: 'https://lh5.googleusercontent.com/p/AF1QipNnvXr1ejUm7zLvjHqbSaHIhDpr-3XiE8kMI2Nv=w408-h306-k-no',
+          },
+          {
+            size: 100,
+            uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
+          },
+          {
+            size: 100,
+            uri: 'https://imgnn.seoul.co.kr/img/upload/2013/05/05/SSI_20130505112323_V.jpg',
+          },
+          {
+            size: 10000,
+            uri: 'https://lh5.googleusercontent.com/p/AF1QipNnvXr1ejUm7zLvjHqbSaHIhDpr-3XiE8kMI2Nv=w408-h306-k-no',
+          },
+          {
+            size: 100,
+            uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
+          },
+        ],
+        interest: ['seong-yeon'],
+        clap: ['seong-yeon'],
+      },
       {
         title: '테스트',
         contents: '꽃길만 걷게 해줄게',
@@ -205,9 +195,19 @@ const { actions, reducer } = createSlice({
         clap: ['seong-yeon'],
       },
     ] as PostDataType[],
-    chats: [] as any[],
+    chats: [] as ChatDataType[],
   },
   reducers: {
+    setName: (
+      state,
+      { payload }: PayloadAction<{ name: string; img: string }>
+    ) => ({
+      ...state,
+      user: {
+        name: payload.name,
+        img: payload.img,
+      },
+    }),
     addPost: (state, { payload }: PayloadAction<PostDataType>) => ({
       ...state,
       posts: [payload, ...state.posts],
@@ -243,8 +243,37 @@ const { actions, reducer } = createSlice({
         posts: copyPosts,
       };
     },
+    addPosts: (state) => {
+      const posts: PostDataType[] = [];
+      if (state.posts.length > 100) {
+        return { ...state };
+      } else {
+        for (let i = 0; i < 20; i++)
+          posts.push({
+            title: '테스트',
+            contents: '꽃길만 걷게 해줄게',
+            files: [],
+            interest: ['seong-yeon'],
+            clap: ['seong-yeon'],
+          });
+      }
+      return { ...state, posts: [...state.posts, ...posts] };
+    },
+    addChat: (state, { payload }: PayloadAction<ChatDataType>) => ({
+      ...state,
+      chats: [payload, ...state.chats],
+    }),
+    resetChats: (state) => ({ ...state, chats: [] }),
   },
 });
 
-export const { addPost, deletePost, setInteration } = actions;
+export const {
+  addPost,
+  deletePost,
+  setInteration,
+  addPosts,
+  setName,
+  addChat,
+  resetChats,
+} = actions;
 export default reducer;

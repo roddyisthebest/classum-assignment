@@ -1,38 +1,67 @@
-import { StyleSheet, Image, View, Dimensions } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  FlatList,
+  Dimensions,
+} from 'react-native';
+import Post from '../components/Post';
+import { useSelector, useDispatch } from 'react-redux';
 
-const Detail = () => {
+import Upload from '../components/Upload';
+import {
+  addChat,
+  addPosts,
+  initialStateProps,
+  resetChats,
+} from '../store/slice';
+import Chat from '../components/Chat';
+import { db } from '../firebase';
+import { ChatDataType } from '../types';
+const Detail = ({
+  navigation: { navigate },
+}: {
+  navigation: { navigate: Function };
+}) => {
+  const renderItem = ({ item }: { item: ChatDataType }) => <Chat data={item} />;
+  const dispatch = useDispatch();
+  const target = useRef<any>();
+  const { chats } = useSelector((state: initialStateProps) => ({
+    chats: state.chats,
+  }));
+
   return (
-    <View style={styles.container}>
-      <Image
-        source={{
-          uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
-        }}
-        style={styles.img}
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        inverted
+        renderItem={renderItem}
+        data={chats}
+        keyExtractor={(item, index) => index.toString()}
+        onContentSizeChange={() =>
+          target.current.scrollToOffset({ animated: true, offset: 0 })
+        }
+        ListHeaderComponent={
+          <View
+            style={{ height: Dimensions.get('window').height * 0.2 }}
+          ></View>
+        }
+        ref={target}
       />
-    </View>
+
+      <Upload type="chat"></Upload>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    bottom: 0,
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height * 0.08,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowOffset: { width: 0, height: -3 },
-    shadowColor: 'lightgray',
-    shadowOpacity: 0.8,
-    elevation: 1,
+    flex: 1,
+    backgroundColor: '#EFF0F4',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 15,
-  },
-  img: {
-    width: Dimensions.get('window').height * 0.04,
-    height: Dimensions.get('window').height * 0.04,
-    borderRadius: 20,
+    position: 'relative',
   },
 });
 

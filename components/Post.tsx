@@ -13,10 +13,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import { initialStateProps, setInteration } from '../store/slice';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { PostDataType, FileType } from '../types';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+
+type NavigationParam = {
+  Stack: {
+    screen: string;
+  };
+};
 
 const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
   const dispatch = useDispatch();
-  const name = useSelector((state: initialStateProps) => state.name);
+  const navigation = useNavigation<NavigationProp<NavigationParam>>();
+
+  const name = useSelector((state: initialStateProps) => state.user.name);
   const [clap, setClap] = useState<boolean>(false);
   const [interest, setInterest] = useState<boolean>(false);
   const [height, setHeight] = useState<number>(0);
@@ -42,7 +51,12 @@ const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
 
   return (
     <View style={styles.containerWrapper}>
-      <Pressable style={styles.container} onPress={() => {}}>
+      <Pressable
+        style={styles.container}
+        onPress={() => {
+          navigation.navigate('Stack', { screen: 'Detail' });
+        }}
+      >
         <View style={styles.userImageWrapper}>
           <ImageBackground
             source={{
