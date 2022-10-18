@@ -4,16 +4,14 @@ import Swiper from 'react-native-swiper';
 import { FileType } from '../types';
 const Slide = ({
   route: {
-    params: { data, index },
+    params: { item, index },
   },
-  navigation: { setOptions, goBack },
 }: {
-  route: { params: { index: number; data: string[] } };
-  navigation: { setOptions: Function; goBack: Function };
+  route: { params: { index: number; item: string[] } };
 }) => {
   return (
-    <Swiper showsButtons={data.length !== 1} index={index}>
-      {data.map((uri, index) => (
+    <Swiper showsButtons={item.length !== 1} index={index}>
+      {item.map((uri, index) => (
         <ImageBackground
           source={{
             uri,
