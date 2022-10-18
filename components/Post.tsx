@@ -14,6 +14,8 @@ import { initialStateProps, setInteration } from '../store/slice';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { PostDataType, FileType } from '../types';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import ImagePreview from '../components/ImagePreview';
+import * as Sharing from 'expo-sharing';
 
 type NavigationParam = {
   Stack: {
@@ -21,7 +23,7 @@ type NavigationParam = {
   };
 };
 
-const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
+const Post = memo(({ index, item }: { index: number; item: PostDataType }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp<NavigationParam>>();
 
@@ -29,25 +31,37 @@ const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
   const [clap, setClap] = useState<boolean>(false);
   const [interest, setInterest] = useState<boolean>(false);
   const [height, setHeight] = useState<number>(0);
+  console.log(item);
   useEffect(() => {
-    const isThere = data.interest.find((element) => element === name);
+    const isThere = item.interest.find((element) => element === name);
     setInterest(isThere ? true : false);
-  }, [data.interest]);
+  }, [item.interest]);
 
   useEffect(() => {
-    const isThere = data.clap.find((element) => element === name);
+    const isThere = item.clap.find((element) => element === name);
     setClap(isThere ? true : false);
-  }, [data.clap]);
+  }, [item.clap]);
 
   useEffect(() => {
-    if (data.files.length === 1) {
-      setHeight(130);
-    } else if (data.files.length === 2) {
-      setHeight(150);
-    } else {
-      setHeight(105);
+    if (item.dataType === 'images') {
+      let urlData = item.data as string[];
+      if (urlData.length === 1) {
+        setHeight(130);
+      } else if (urlData.length === 2) {
+        setHeight(150);
+      } else {
+        setHeight(105);
+      }
     }
-  }, [data.files]);
+  }, [item.data]);
+
+  const saveFile = async (url: string) => {
+    try {
+      await Sharing.shareAsync(url);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <View style={styles.containerWrapper}>
@@ -60,7 +74,7 @@ const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
         <View style={styles.userImageWrapper}>
           <ImageBackground
             source={{
-              uri: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
+              uri: item.user.img,
             }}
             borderRadius={40}
             resizeMode={'cover'}
@@ -68,74 +82,56 @@ const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
           ></ImageBackground>
         </View>
         <View style={styles.header}>
-          <Text style={styles.headerNameText}>배성연</Text>
+          <Text style={styles.headerNameText}>{item.user.name}</Text>
           <View style={styles.spot}></View>
           <Text style={styles.headerText}>참여자</Text>
           <View style={styles.spot}></View>
           <Text style={styles.headerText}>2 hours ago</Text>
         </View>
-        {data.title.length !== 0 ? (
+        {item.title.length !== 0 ? (
           <TextInput
-            value={data.title}
+            value={item.title}
             editable={false}
             style={styles.headerInput}
           ></TextInput>
         ) : null}
+        {item.contents.length !== 0 ? (
+          <TextInput
+            value={item.contents}
+            multiline
+            editable={false}
+            style={styles.headerContents}
+          ></TextInput>
+        ) : null}
 
-        <TextInput
-          value={data.contents}
-          multiline
-          editable={false}
-          style={styles.headerContents}
-        ></TextInput>
-        {data.files.length !== 0 ? (
-          <View
-            style={{
-              height,
-              marginTop: 15,
-              marginBottom: 5,
-              flexDirection: 'row',
-            }}
-          >
-            {data.files.map((file: FileType, index: number) => {
-              return index < 3 ? (
-                <TouchableOpacity
-                  style={{ flex: 1, marginLeft: index !== 0 ? 10 : 0 }}
-                  key={index}
-                >
-                  {index === 2 ? (
-                    <View style={styles.imagePlusBackground}>
-                      <Text style={styles.imagePlusText}>
-                        +{data.files.length - 2}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {file.type === 'success' ? (
-                    <View style={styles.fileItem}>
-                      <Text style={styles.flieTitleText}>
-                        {(file.name?.length as number) > 7
-                          ? file.name?.substring(0, 8) + '...'
-                          : file.name}
-                      </Text>
-                      <Text style={styles.fileSubText}>
-                        {file.mimeType.split('/')[1]} ·{' '}
-                        {(file.size / 1000000).toFixed(1)}MB
-                      </Text>
-                    </View>
-                  ) : (
-                    <ImageBackground
-                      source={{
-                        uri: file.uri,
-                      }}
-                      borderRadius={8}
-                      resizeMode={'cover'}
-                      style={styles.imageItem}
-                    ></ImageBackground>
-                  )}
-                </TouchableOpacity>
-              ) : null;
-            })}
-          </View>
+        {(item.data as string[]).length !== 0 ? (
+          item.dataType === 'images' ? (
+            <ImagePreview
+              type="post"
+              item={item.data as string[]}
+            ></ImagePreview>
+          ) : (
+            <TouchableOpacity
+              style={styles.fileItem}
+              onPress={() => {
+                saveFile((item.data as FileType).uri);
+              }}
+            >
+              <View style={styles.fileLeftSide}>
+                <Icon name="download-outline" color="black" size={20} />
+              </View>
+              <View style={styles.fileRightSide}>
+                <Text style={styles.fileTitle}>
+                  {(item.data as FileType).name}
+                </Text>
+                <Text style={styles.fileType}>
+                  {(item.data as FileType).uri.split('.')[1]} ·
+                  {((item.data as FileType).size / 1000000).toFixed(1)}
+                  MB
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )
         ) : null}
         <View style={styles.tagWrapper}>
           <View style={styles.tagItem}>
@@ -169,7 +165,7 @@ const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
                 : styles.interactionTextWithNoExistence
             }
           >
-            관심있어요 {data.interest.length}
+            관심있어요 {item.interest.length}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -191,7 +187,7 @@ const Post = memo(({ index, data }: { index: number; data: PostDataType }) => {
                 : styles.interactionTextWithNoExistence
             }
           >
-            짝짝 {data.clap.length}
+            짝짝 {item.clap.length}
           </Text>
         </TouchableOpacity>
       </View>
@@ -323,21 +319,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   fileItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
+    height: 80,
+    flexDirection: 'row',
     backgroundColor: '#F8F8F8',
     borderColor: '#E0E1E5',
     borderWidth: 1.5,
     borderRadius: 8,
+    marginTop: 10,
   },
-  flieTitleText: {
+  fileLeftSide: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fileRightSide: {
+    flex: 3,
+    paddingVertical: 15,
+    justifyContent: 'center',
+  },
+  fileTitle: {
+    fontSize: 10,
+    fontWeight: '600',
     color: 'black',
-    fontSize: 12,
-    fontWeight: '700',
   },
-  fileSubText: {
-    fontSize: 7,
+  fileType: {
+    fontSize: 10,
     fontWeight: '600',
     color: 'gray',
   },

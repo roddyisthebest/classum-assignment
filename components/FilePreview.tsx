@@ -10,29 +10,29 @@ import { memo } from 'react';
 import { FileType } from '../types';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const Preview = memo(
+const FilePreview = memo(
   ({
-    data,
+    item,
     deleteFile,
     index,
   }: {
-    data: FileType;
+    item: FileType;
     deleteFile: Function;
     index: number;
   }) => {
-    return data.type === 'success' ? (
+    return item.type === 'success' ? (
       <View style={styles.fileWrapper}>
         <View style={styles.fileLeftSide}>
           <Icon name="document-attach-outline" color="black" size={20} />
         </View>
         <View style={styles.fileRightSide}>
           <Text style={styles.fileTitle}>
-            {(data.name?.length as number) > 7
-              ? data.name?.substring(0, 8) + '...'
-              : data.name}
+            {(item.name?.length as number) > 7
+              ? item.name?.substring(0, 8) + '...'
+              : item.name}
           </Text>
           <Text style={styles.fileType}>
-            {data.mimeType.slice(0, 8)} · {(data.size / 1000000).toFixed(1)}MB
+            {item.uri.split('.')[1]} · {(item.size / 1000000).toFixed(1)}MB
           </Text>
         </View>
         <Pressable
@@ -56,7 +56,7 @@ const Preview = memo(
         </Pressable>
         <ImageBackground
           source={{
-            uri: data.uri,
+            uri: item.uri,
           }}
           style={styles.image}
           resizeMode="cover"
@@ -131,4 +131,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Preview;
+export default FilePreview;

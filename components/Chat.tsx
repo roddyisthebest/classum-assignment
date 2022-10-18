@@ -4,113 +4,130 @@ import {
   Text,
   View,
   Image,
-  TextInput,
-  ImageBackground,
   TouchableOpacity,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { initialStateProps } from '../store/slice';
 import { ChatDataType } from '../types';
 import Icon from 'react-native-vector-icons/Ionicons';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import ImagePreview from './ImagePreview';
 
-const Chat = memo(({ data }: { data: ChatDataType }) => {
+const Chat = memo(({ item }: { item: ChatDataType }) => {
   const { name } = useSelector((state: initialStateProps) => ({
     name: state.user.name,
   }));
 
+  const shareFile = useCallback(async (url: string, type: string) => {
+    let fileUri = `${
+      FileSystem.documentDirectory
+    }${new Date().getTime()}.${type}`;
+    try {
+      console.log(url);
+      const { uri } = await FileSystem.downloadAsync(url, fileUri);
+      await Sharing.shareAsync(uri);
+    } catch (e) {
+      console.log(e);
+    }
+  }, []);
+
   return (
     <View
       style={
-        data.user.name === name ? myStyles.container : noyMyStyles.container
+        item.user.name === name ? myStyles.container : noyMyStyles.container
       }
     >
       <View
         style={
-          data.user.name === name
+          item.user.name === name
             ? myStyles.chatWrapper
             : noyMyStyles.chatWrapper
         }
       >
         <View
           style={
-            data.user.name === name
+            item.user.name === name
               ? myStyles.headerWrapper
               : noyMyStyles.headerWrapper
           }
         >
-          <Text style={myStyles.headerNameText}>{data.user.name}</Text>
+          <Text style={myStyles.headerNameText}>{item.user.name}</Text>
           <View style={myStyles.headerDot}></View>
           <Text style={myStyles.headerPositionText}>참여자</Text>
           <Image
             source={{
-              uri: data.user.img,
+              uri: item.user.img,
             }}
             style={
-              data.user.name === name
+              item.user.name === name
                 ? myStyles.headerImage
                 : noyMyStyles.headerImage
             }
           ></Image>
         </View>
         <View style={myStyles.conentsWrapper}>
-          {data.type === 'text' && (
+          {item.type === 'text' && (
             <TouchableOpacity
               style={
-                data.user.name === name
+                item.user.name === name
                   ? myStyles.contentsButton
                   : noyMyStyles.contentsButton
               }
             >
               <Text
                 style={
-                  data.user.name === name
+                  item.user.name === name
                     ? myStyles.contentsButtonText
                     : noyMyStyles.contentsButtonText
                 }
               >
-                {data.contents as string}
+                {item.contents as string}
               </Text>
             </TouchableOpacity>
           )}
 
-          {data.type === 'images' && (
-            <View style={allStyles.imagesWrapper}>
-              {(data.contents as string[]).map((uri, index) => (
-                <ImageBackground
-                  source={{
-                    uri,
-                  }}
-                  borderRadius={8}
-                  resizeMode={'cover'}
-                  key={uri}
-                  style={{ flex: 1, backgroundColor: 'gray', borderRadius: 8 }}
-                ></ImageBackground>
-              ))}
-            </View>
+          {item.type === 'images' && (
+            <ImagePreview
+              type="chat"
+              item={item.contents as string[]}
+            ></ImagePreview>
           )}
 
-          {data.type === 'file' && (
-            <TouchableOpacity style={allStyles.fileWrapper}>
+          {item.type === 'file' && (
+            <TouchableOpacity
+              style={allStyles.fileWrapper}
+              onPress={() => {
+                shareFile(
+                  (item.contents as any).url,
+                  (item.contents as any).type
+                );
+              }}
+            >
               <View style={allStyles.fileLeftSide}>
                 <Icon name="document-attach-outline" color="black" size={20} />
               </View>
               <View style={allStyles.fileRightSide}>
                 <Text style={allStyles.fileTitle}>
-                  {((data.contents as any).name.length as number) > 7
-                    ? (data.contents as any)?.name.substring(0, 8) + '...'
-                    : (data.contents as any)?.name}
+                  {((item.contents as any).name.length as number) > 7
+                    ? (item.contents as any)?.name.substring(0, 8) + '...'
+                    : (item.contents as any)?.name}
                 </Text>
                 <Text style={allStyles.fileType}>
-                  {(data.contents as any).type} ·
-                  {((data.contents as any).size / 1000000).toFixed(1)}MB
+                  {(item.contents as any).type} ·
+                  {((item.contents as any).size / 1000000).toFixed(1)}MB
                 </Text>
               </View>
             </TouchableOpacity>
           )}
         </View>
         <View style={myStyles.timeWrapper}>
-          <Text style={myStyles.timeText}>7:58 PM</Text>
+          <Text style={myStyles.timeText}>
+            {new Date(item.createdAt).getHours()}:
+            {new Date(item.createdAt).getMinutes()}(
+            {new Date(item.createdAt).getHours() >= 12 ? 'PM' : 'AM'})
+          </Text>
         </View>
       </View>
     </View>

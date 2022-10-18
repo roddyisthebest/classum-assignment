@@ -15,9 +15,11 @@ export type FileType = {
 export type PostDataType = {
   title: string;
   contents: string;
-  files: FileType[] | any[];
+  dataType: 'file' | 'images';
+  data: string[] | FileType;
   interest: string[];
   clap: string[];
+  user: UserDataType;
 };
 
 export type UserDataType = {
@@ -28,6 +30,6 @@ export type UserDataType = {
 export type ChatDataType = {
   user: UserDataType;
   type: 'text' | 'file' | 'images';
-  contents: string | string[] | { name: string; type: string; url: string };
+  contents: string | string[] | FileType[];
   createdAt: string;
 };

@@ -1,19 +1,38 @@
-import { StyleSheet, Text, View } from 'react-native';
-
-const Slide = () => {
+import { useEffect } from 'react';
+import { StyleSheet, Text, View, ImageBackground } from 'react-native';
+import Swiper from 'react-native-swiper';
+import { FileType } from '../types';
+const Slide = ({
+  route: {
+    params: { data, index },
+  },
+  navigation: { setOptions, goBack },
+}: {
+  route: { params: { index: number; data: string[] } };
+  navigation: { setOptions: Function; goBack: Function };
+}) => {
   return (
-    <View style={styles.container}>
-      <Text>Slide</Text>
-    </View>
+    <Swiper showsButtons={data.length !== 1} index={index}>
+      {data.map((uri, index) => (
+        <ImageBackground
+          source={{
+            uri,
+          }}
+          resizeMode="contain"
+          style={styles.item}
+          key={index}
+          defaultSource={require('../assets/loadingImage.png')}
+        ></ImageBackground>
+      ))}
+    </Swiper>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  item: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   SafeAreaView,
   FlatList,
   Dimensions,
+  Platform,
 } from 'react-native';
 import Post from '../components/Post';
 import { useSelector, useDispatch } from 'react-redux';
 
 import Upload from '../components/Upload';
-import { addPosts, initialStateProps } from '../store/slice';
+import { addPosts, initialStateProps, setVariation } from '../store/slice';
 import { PostDataType } from '../types';
 const Community = ({
   navigation: { navigate },
@@ -24,11 +24,23 @@ const Community = ({
   }: {
     item: PostDataType;
     index: number;
-  }) => <Post data={item} index={index} />;
+  }) => <Post item={item} index={index} />;
   const dispatch = useDispatch();
   const { posts } = useSelector((state: initialStateProps) => ({
     posts: state.posts,
   }));
+  const { newPost } = useSelector((state: initialStateProps) => ({
+    newPost: state.variation.newPost,
+  }));
+
+  const target = useRef<any>();
+
+  useEffect(() => {
+    if (newPost) {
+      target.current.scrollToOffset({ animated: true, offset: 0 });
+      dispatch(setVariation({ key: 'newPost', value: false }));
+    }
+  }, [newPost]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -36,15 +48,27 @@ const Community = ({
         renderItem={renderItem}
         data={posts}
         keyExtractor={(item, index) => index.toString()}
-        ListFooterComponent={
+        ListHeaderComponent={
           <View
-            style={{ height: Dimensions.get('window').height * 0.1 }}
+            style={{
+              height:
+                Platform.OS === 'android'
+                  ? Dimensions.get('window').height * 0.05
+                  : 0,
+            }}
           ></View>
         }
         onEndReached={() => {
           dispatch(addPosts());
           console.log('밑에 닿음');
         }}
+        removeClippedSubviews={true}
+        ListFooterComponent={
+          <View
+            style={{ height: Dimensions.get('window').height * 0.1 }}
+          ></View>
+        }
+        ref={target}
       />
 
       <Upload type="post"></Upload>

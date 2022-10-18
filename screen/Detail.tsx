@@ -6,6 +6,8 @@ import {
   SafeAreaView,
   FlatList,
   Dimensions,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import Post from '../components/Post';
 import { useSelector, useDispatch } from 'react-redux';
@@ -16,6 +18,7 @@ import {
   addPosts,
   initialStateProps,
   resetChats,
+  setVariation,
 } from '../store/slice';
 import Chat from '../components/Chat';
 import { db } from '../firebase';
@@ -25,13 +28,45 @@ const Detail = ({
 }: {
   navigation: { navigate: Function };
 }) => {
-  const renderItem = ({ item }: { item: ChatDataType }) => <Chat data={item} />;
+  const renderItem = ({ item }: { item: ChatDataType }) => <Chat item={item} />;
   const dispatch = useDispatch();
   const target = useRef<any>();
   const { chats } = useSelector((state: initialStateProps) => ({
     chats: state.chats,
   }));
 
+  const { newChat } = useSelector((state: initialStateProps) => ({
+    newChat: state.variation.newChat,
+  }));
+
+  const [iosHeaderHeight, setIosHeaderHeight] = useState<number>(0.2);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setIosHeaderHeight(0.5);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setIosHeaderHeight(0.2);
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (newChat) {
+      target.current.scrollToOffset({ animated: true, offset: 0 });
+      dispatch(setVariation({ key: 'newChat', value: false }));
+    }
+  }, [newChat]);
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -39,15 +74,18 @@ const Detail = ({
         renderItem={renderItem}
         data={chats}
         keyExtractor={(item, index) => index.toString()}
-        onContentSizeChange={() =>
-          target.current.scrollToOffset({ animated: true, offset: 0 })
-        }
         ListHeaderComponent={
           <View
-            style={{ height: Dimensions.get('window').height * 0.2 }}
+            style={{
+              height:
+                Platform.OS === 'android'
+                  ? Dimensions.get('window').height * 0.25
+                  : Dimensions.get('window').height * iosHeaderHeight,
+            }}
           ></View>
         }
         ref={target}
+        removeClippedSubviews={true}
       />
 
       <Upload type="chat"></Upload>

@@ -21,8 +21,13 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSelector, useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Preview from './Preview';
-import { addChat, addPost, initialStateProps } from '../store/slice';
+import FilePreview from './FilePreview';
+import {
+  addChat,
+  addPost,
+  initialStateProps,
+  setVariation,
+} from '../store/slice';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -36,24 +41,31 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
   const { user } = useSelector((state: initialStateProps) => ({
     user: state.user,
   }));
+
   const [clicked, setClicked] = useState(false);
   const [upload, setUpload] = useState(false);
   const [files, setFiles] = useState<FileType[]>([]);
   const [title, setTitle] = useState<string>('');
   const [contents, setContents] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [localLoading, setlocalLoading] = useState<boolean>(false);
+  const [remoteLoading, setRemoteLoading] = useState<boolean>(false);
 
   useEffect(() => {
     setClicked(type === 'chat');
   }, [type]);
 
   const renderItem = ({ item, index }: { item: FileType; index: number }) => (
-    <Preview data={item} key={index} index={index} deleteFile={deleteFile} />
+    <FilePreview
+      item={item}
+      key={index}
+      index={index}
+      deleteFile={deleteFile}
+    />
   );
 
   const uploadImage = useCallback(async () => {
     try {
-      setLoading(true);
+      setlocalLoading(true);
       let result: any = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         aspect: [4, 3],
@@ -66,16 +78,14 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
     } catch (e) {
       console.log(e);
     } finally {
-      setLoading(false);
+      setlocalLoading(false);
     }
-  }, []);
+  }, [files]);
 
   const uploadFile = useCallback(async () => {
     try {
-      setLoading(true);
-
+      setlocalLoading(true);
       let result: any = await DocumentPicker.getDocumentAsync({});
-
       if (result.type === 'success') {
         setFiles((prev) => [...prev, ...[result]]);
         console.log(result);
@@ -83,85 +93,134 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
     } catch (e) {
       console.log(e);
     } finally {
-      setLoading(false);
+      setlocalLoading(false);
     }
-  }, []);
+  }, [localLoading]);
 
-  const deleteFile = useCallback((idx: number) => {
-    setFiles((prev) => prev.filter((file, index) => index !== idx));
-  }, []);
+  const deleteFile = useCallback(
+    (idx: number) => {
+      setFiles((prev) => prev.filter((file, index) => index !== idx));
+    },
+    [files]
+  );
 
   const upLoadToStorage = useCallback(async () => {
     const imageUrls: any[] = [];
     const fileUrls: any[] = [];
+    try {
+      setRemoteLoading(true);
 
-    await Promise.all(
-      files.map(async (e) => {
-        const blob = await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.onload = function () {
-            resolve(xhr.response);
-          };
-          xhr.onerror = function (e) {
-            console.log(e);
-            reject(new TypeError('Network request failed'));
-          };
-          xhr.responseType = 'blob';
-          xhr.open('GET', e.uri, true);
-          xhr.send(null);
-        });
-        const fileName = new Date().getTime().toString();
-        await uploadBytes(ref(storage, fileName), blob as any);
-        const url = await getDownloadURL(ref(storage, fileName));
-        if (e.type === 'success') {
-          fileUrls.push({
-            name: e.name,
-            type: e.mimeType,
-            url: url,
-            size: e.size,
+      await Promise.all(
+        files.map(async (e) => {
+          const blob = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = function () {
+              resolve(xhr.response);
+            };
+            xhr.onerror = function (e) {
+              console.log(e);
+              reject(new TypeError('Network request failed'));
+            };
+            xhr.responseType = 'blob';
+            xhr.open('GET', e.uri, true);
+            xhr.send(null);
           });
-        } else {
-          imageUrls.push(url);
-        }
-        return new Promise((resolve, reject) => {
-          resolve('clear set urlLogic');
+          const fileName =
+            new Date().getTime().toString() + '.' + e.uri.split('.')[1];
+
+          await uploadBytes(ref(storage, fileName), blob as any);
+          const url = await getDownloadURL(ref(storage, fileName));
+          if (e.type === 'success') {
+            fileUrls.push({
+              name: e.name,
+              type: e.uri.split('.')[1],
+              url: url,
+              size: e.size,
+            });
+          } else {
+            imageUrls.push(url);
+          }
+          return new Promise((resolve, reject) => {
+            resolve('clear set urlLogic');
+          });
+        })
+      );
+      imageUrls.length !== 0 &&
+        (await addDoc(collection(db, 'chats'), {
+          user: {
+            name: user.name,
+            img: user.img,
+          },
+          contents: imageUrls,
+          type: 'images',
+          createdAt: new Date().getTime(),
+        }));
+
+      console.log(fileUrls);
+      fileUrls.map(async (url) => {
+        await addDoc(collection(db, 'chats'), {
+          user: {
+            name: user.name,
+            img: user.img,
+          },
+          contents: url,
+          type: 'file',
+          createdAt: new Date().getTime(),
         });
+      });
+
+      contents.length !== 0 &&
+        (await addDoc(collection(db, 'chats'), {
+          user: {
+            name: user.name,
+            img: user.img,
+          },
+          contents,
+          type: 'text',
+          createdAt: new Date().getTime(),
+        }));
+      dispatch(setVariation({ key: 'newChat', value: true }));
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setRemoteLoading(false);
+    }
+  }, [files, contents]);
+
+  const upLoadToStore = useCallback(async () => {
+    const fileteredImages = files.filter((e) => e.type !== 'success');
+    const fileteredFiles = files.filter((e) => e.type === 'success');
+
+    dispatch(
+      addPost({
+        title,
+        contents,
+        interest: [user.name],
+        clap: [user.name],
+        data:
+          fileteredImages.length > 0 ? fileteredImages.map((e) => e.uri) : [],
+        dataType: 'images',
+        user,
       })
     );
-    imageUrls.length !== 0 &&
-      (await addDoc(collection(db, 'chats'), {
-        user: {
-          name: user.name,
-          img: user.img,
-        },
-        contents: imageUrls,
-        type: 'images',
-        createdAt: new Date().getTime(),
-      }));
 
-    fileUrls.map(async (url) => {
-      await addDoc(collection(db, 'chats'), {
-        user: {
-          name: user.name,
-          img: user.img,
-        },
-        contents: url,
-        type: 'file',
-        createdAt: new Date().getTime(),
-      });
-    });
+    fileteredFiles.length !== 0 &&
+      fileteredFiles.map((e) =>
+        dispatch(
+          addPost({
+            title: '',
+            contents: '파일업로드',
+            interest: [user.name],
+            clap: [user.name],
+            data: e,
+            dataType: 'file',
+            user,
+          })
+        )
+      );
 
-    contents.length !== 0 &&
-      (await addDoc(collection(db, 'chats'), {
-        user: {
-          name: user.name,
-          img: user.img,
-        },
-        contents,
-        type: 'text',
-        createdAt: new Date().getTime(),
-      }));
-  }, [files, contents]);
+    dispatch(setVariation({ key: 'newPost', value: true }));
+  }, [files]);
 
   const reset = useCallback(() => {
     type !== 'chat' && setClicked(false);
@@ -243,12 +302,12 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
             value={contents}
             onChangeText={(text) => setContents(text)}
             multiline={type !== 'chat'}
-            numberOfLines={10}
+            numberOfLines={1}
             ref={target}
           ></TextInput>
-          {files.length || loading ? (
+          {files.length || localLoading ? (
             <View style={clickedStyles.flatListWrapper}>
-              {loading ? (
+              {localLoading ? (
                 <ActivityIndicator color="#687684" size={30} />
               ) : (
                 <FlatList
@@ -291,25 +350,19 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
                 color="black"
               />
             </Pressable>
-            <Pressable
-              onPress={async () => {
-                type !== 'chat'
-                  ? dispatch(
-                      addPost({
-                        title,
-                        contents,
-                        files,
-                        interest: [user.name],
-                        clap: [user.name],
-                      })
-                    )
-                  : upLoadToStorage();
-
-                reset();
-              }}
-            >
-              <Icon name={'send'} size={20} color="#86868E" />
-            </Pressable>
+            {remoteLoading ? (
+              <ActivityIndicator color="#687684" size={30} />
+            ) : (
+              <Pressable
+                disabled={remoteLoading}
+                onPress={async () => {
+                  type !== 'chat' ? upLoadToStore() : upLoadToStorage();
+                  reset();
+                }}
+              >
+                <Icon name={'send'} size={20} color="#86868E" />
+              </Pressable>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -321,8 +374,9 @@ const clickedStyles = StyleSheet.create({
   containerChat: {
     width: Dimensions.get('window').width,
     backgroundColor: 'white',
-    borderTopColor: 'lightgray',
+    borderColor: 'lightgray',
     borderTopWidth: 1,
+    borderBottomWidth: 1,
     paddingHorizontal: 20,
     position: 'absolute',
     bottom: -0,

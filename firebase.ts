@@ -2,12 +2,12 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBKdFFjAzVsbY0HtRta4JCRqqlZAg4BMDc',
-  authDomain: 'classum-assignment-57c89.firebaseapp.com',
-  projectId: 'classum-assignment-57c89',
-  storageBucket: 'classum-assignment-57c89.appspot.com',
-  messagingSenderId: '578004364428',
-  appId: '1:578004364428:web:617c2bb396d95f561edfa9',
+  apiKey: 'AIzaSyD9hDXaRL3r8F7cqVU5KAs_H0G4f7QM314',
+  authDomain: 'classum-assignment-e971b.firebaseapp.com',
+  projectId: 'classum-assignment-e971b',
+  storageBucket: 'classum-assignment-e971b.appspot.com',
+  messagingSenderId: '68003982983',
+  appId: '1:68003982983:web:31a8b27974c009f5cb1222',
 };
 
 const app = initializeApp(firebaseConfig);
