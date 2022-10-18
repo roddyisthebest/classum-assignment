@@ -44,22 +44,7 @@ const Stack = ({
           headerShadowVisible: false,
         }}
       />
-      <NativeStack.Screen
-        name="Slide"
-        component={Slide as any}
-        options={{
-          headerLeft: () =>
-            Platform.OS === 'ios' ? (
-              <Pressable
-                onPress={() => {
-                  goBack();
-                }}
-              >
-                <Icon name={'arrow-back'} color={'black'} size={25}></Icon>
-              </Pressable>
-            ) : null,
-        }}
-      />
+      <NativeStack.Screen name="Slide" component={Slide as any} />
     </NativeStack.Navigator>
   );
 };
