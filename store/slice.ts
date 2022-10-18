@@ -262,18 +262,6 @@ const { actions, reducer } = createSlice({
           img: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
         },
       },
-      {
-        title: '테스트',
-        contents: '꽃길만 걷게 해줄게',
-        data: [],
-        dataType: 'images',
-        interest: ['seong-yeon'],
-        clap: ['seong-yeon'],
-        user: {
-          name: 'seong-yeon',
-          img: 'https://blog.kakaocdn.net/dn/bdGVxy/btq6N2YiHF8/4MdPYEvSV88WW7Z48gw84K/img.png',
-        },
-      },
     ] as PostDataType[],
     chats: [] as ChatDataType[],
     variation: {
