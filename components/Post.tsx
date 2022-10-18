@@ -23,7 +23,7 @@ type NavigationParam = {
   };
 };
 
-const Post = memo(({ index, item }: { index: number; item: PostDataType }) => {
+const Post = ({ index, item }: { index: number; item: PostDataType }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp<NavigationParam>>();
 
@@ -193,7 +193,7 @@ const Post = memo(({ index, item }: { index: number; item: PostDataType }) => {
       </View>
     </View>
   );
-});
+};
 
 const styles = StyleSheet.create({
   containerWrapper: {
@@ -365,4 +365,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Post;
+export default memo(Post);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
   TouchableOpacity,
   View,
@@ -8,7 +8,6 @@ import {
   Dimensions,
 } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { FileType } from '../types';
 
 type NavigationParam = {
   Stack: {
@@ -104,4 +103,4 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 });
-export default ImagePreview;
+export default memo(ImagePreview);

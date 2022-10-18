@@ -15,7 +15,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import ImagePreview from './ImagePreview';
 
-const Chat = memo(({ item }: { item: ChatDataType }) => {
+const Chat = ({ item }: { item: ChatDataType }) => {
   const { name } = useSelector((state: initialStateProps) => ({
     name: state.user.name,
   }));
@@ -132,7 +132,7 @@ const Chat = memo(({ item }: { item: ChatDataType }) => {
       </View>
     </View>
   );
-});
+};
 
 const myStyles = StyleSheet.create({
   container: {
@@ -271,4 +271,4 @@ const allStyles = StyleSheet.create({
   },
 });
 
-export default Chat;
+export default memo(Chat);

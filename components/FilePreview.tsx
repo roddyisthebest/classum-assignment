@@ -10,62 +10,60 @@ import { memo } from 'react';
 import { FileType } from '../types';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const FilePreview = memo(
-  ({
-    item,
-    deleteFile,
-    index,
-  }: {
-    item: FileType;
-    deleteFile: Function;
-    index: number;
-  }) => {
-    return item.type === 'success' ? (
-      <View style={styles.fileWrapper}>
-        <View style={styles.fileLeftSide}>
-          <Icon name="document-attach-outline" color="black" size={20} />
-        </View>
-        <View style={styles.fileRightSide}>
-          <Text style={styles.fileTitle}>
-            {(item.name?.length as number) > 7
-              ? item.name?.substring(0, 8) + '...'
-              : item.name}
-          </Text>
-          <Text style={styles.fileType}>
-            {item.uri.split('.')[1]} · {(item.size / 1000000).toFixed(1)}MB
-          </Text>
-        </View>
-        <Pressable
-          style={styles.deleteBtn}
-          onPress={() => {
-            deleteFile(index);
-          }}
-        >
-          <Icon name="close-outline" color="white" size={10} />
-        </Pressable>
+const FilePreview = ({
+  item,
+  deleteFile,
+  index,
+}: {
+  item: FileType;
+  deleteFile: Function;
+  index: number;
+}) => {
+  return item.type === 'success' ? (
+    <View style={styles.fileWrapper}>
+      <View style={styles.fileLeftSide}>
+        <Icon name="document-attach-outline" color="black" size={20} />
       </View>
-    ) : (
-      <View style={styles.imageWrapper}>
-        <Pressable
-          style={styles.deleteBtn}
-          onPress={() => {
-            deleteFile(index);
-          }}
-        >
-          <Icon name="close-outline" color="white" size={10} />
-        </Pressable>
-        <ImageBackground
-          source={{
-            uri: item.uri,
-          }}
-          style={styles.image}
-          resizeMode="cover"
-          borderRadius={5}
-        ></ImageBackground>
+      <View style={styles.fileRightSide}>
+        <Text style={styles.fileTitle}>
+          {(item.name?.length as number) > 7
+            ? item.name?.substring(0, 8) + '...'
+            : item.name}
+        </Text>
+        <Text style={styles.fileType}>
+          {item.uri.split('.')[1]} · {(item.size / 1000000).toFixed(1)}MB
+        </Text>
       </View>
-    );
-  }
-);
+      <Pressable
+        style={styles.deleteBtn}
+        onPress={() => {
+          deleteFile(index);
+        }}
+      >
+        <Icon name="close-outline" color="white" size={10} />
+      </Pressable>
+    </View>
+  ) : (
+    <View style={styles.imageWrapper}>
+      <Pressable
+        style={styles.deleteBtn}
+        onPress={() => {
+          deleteFile(index);
+        }}
+      >
+        <Icon name="close-outline" color="white" size={10} />
+      </Pressable>
+      <ImageBackground
+        source={{
+          uri: item.uri,
+        }}
+        style={styles.image}
+        resizeMode="cover"
+        borderRadius={5}
+      ></ImageBackground>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -131,4 +129,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FilePreview;
+export default memo(FilePreview);
