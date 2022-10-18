@@ -25,12 +25,6 @@ const Root = () => {
         if (change.type === 'added') {
           dispatch(addChat(change.doc.data()));
         }
-        // if (change.type === 'modified') {
-        //   console.log('Modified city: ', change.doc.data());
-        // }
-        // if (change.type === 'removed') {
-        //   console.log('Removed city: ', change.doc.data());
-        // }
       });
     });
     return () => unsubscribe();

@@ -60,7 +60,6 @@ const Community = ({
         }
         onEndReached={() => {
           dispatch(addPosts());
-          console.log('밑에 닿음');
         }}
         removeClippedSubviews={true}
         ListFooterComponent={

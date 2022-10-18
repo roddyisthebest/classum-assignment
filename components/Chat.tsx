@@ -25,7 +25,6 @@ const Chat = ({ item }: { item: ChatDataType }) => {
       FileSystem.documentDirectory
     }${new Date().getTime()}.${type}`;
     try {
-      console.log(url);
       const { uri } = await FileSystem.downloadAsync(url, fileUri);
       await Sharing.shareAsync(uri);
     } catch (e) {

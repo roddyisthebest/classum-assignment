@@ -63,7 +63,7 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
     />
   );
 
-  const uploadImage = useCallback(async () => {
+  const uploadImage = async () => {
     try {
       setlocalLoading(true);
       let result: any = await ImagePicker.launchImageLibraryAsync({
@@ -80,22 +80,21 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
     } finally {
       setlocalLoading(false);
     }
-  }, [files]);
+  };
 
-  const uploadFile = useCallback(async () => {
+  const uploadFile = async () => {
     try {
       setlocalLoading(true);
       let result: any = await DocumentPicker.getDocumentAsync({});
       if (result.type === 'success') {
         setFiles((prev) => [...prev, ...[result]]);
-        console.log(result);
       }
     } catch (e) {
       console.log(e);
     } finally {
       setlocalLoading(false);
     }
-  }, [localLoading]);
+  };
 
   const deleteFile = useCallback(
     (idx: number) => {
@@ -104,7 +103,7 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
     [files]
   );
 
-  const upLoadToStorage = useCallback(async () => {
+  const upLoadToStorage = async () => {
     const imageUrls: any[] = [];
     const fileUrls: any[] = [];
     try {
@@ -156,7 +155,6 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
           createdAt: new Date().getTime(),
         }));
 
-      console.log(fileUrls);
       fileUrls.map(async (url) => {
         await addDoc(collection(db, 'chats'), {
           user: {
@@ -185,9 +183,9 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
     } finally {
       setRemoteLoading(false);
     }
-  }, [files, contents]);
+  };
 
-  const upLoadToStore = useCallback(async () => {
+  const upLoadToStore = async () => {
     const fileteredImages = files.filter((e) => e.type !== 'success');
     const fileteredFiles = files.filter((e) => e.type === 'success');
 
@@ -220,16 +218,16 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
       );
 
     dispatch(setVariation({ key: 'newPost', value: true }));
-  }, [files]);
+  };
 
-  const reset = useCallback(() => {
+  const reset = () => {
     type !== 'chat' && setClicked(false);
     setFiles([]);
     setUpload(false);
     setTitle('');
     setContents('');
     Keyboard.dismiss();
-  }, []);
+  };
 
   return !clicked ? (
     <Pressable

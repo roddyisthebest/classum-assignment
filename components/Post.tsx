@@ -30,8 +30,6 @@ const Post = ({ index, item }: { index: number; item: PostDataType }) => {
   const name = useSelector((state: initialStateProps) => state.user.name);
   const [clap, setClap] = useState<boolean>(false);
   const [interest, setInterest] = useState<boolean>(false);
-  const [height, setHeight] = useState<number>(0);
-  console.log(item);
   useEffect(() => {
     const isThere = item.interest.find((element) => element === name);
     setInterest(isThere ? true : false);
@@ -41,19 +39,6 @@ const Post = ({ index, item }: { index: number; item: PostDataType }) => {
     const isThere = item.clap.find((element) => element === name);
     setClap(isThere ? true : false);
   }, [item.clap]);
-
-  useEffect(() => {
-    if (item.dataType === 'images') {
-      let urlData = item.data as string[];
-      if (urlData.length === 1) {
-        setHeight(130);
-      } else if (urlData.length === 2) {
-        setHeight(150);
-      } else {
-        setHeight(105);
-      }
-    }
-  }, [item.data]);
 
   const saveFile = async (url: string) => {
     try {
