@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PostDataType, ChatDataType } from '../types/index';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type initialStateProps = {
   user: {
@@ -280,11 +281,25 @@ const { actions, reducer } = createSlice({
         img: payload.img,
       },
     }),
-    addPost: (state, { payload }: PayloadAction<PostDataType>) => ({
-      ...state,
-      posts: [payload, ...state.posts],
-    }),
-
+    addPost: (state, { payload }: PayloadAction<PostDataType>) => {
+      // try {
+      //   const valueOfString = await AsyncStorage.getItem('post-value');
+      //   const value = valueOfString===null?JSON.parse(valueString):[];
+      //   value.unshift(payload);
+      //   await AsyncStorage.setItem('post-value',JSON.stringfy(value));
+      //   return {
+      //     ...state,
+      //     posts: [payload, ...state.posts],
+      //   }
+      // } catch (e) {
+      //   // saving error
+      // }
+      return {
+        ...state,
+        posts: [payload, ...state.posts],
+      }
+    },
+    addPostsFromAS:(state,{payload}:PayloadAction<PostDataType[]>)=>({...state,posts:[...payload,...state.posts]}),
     setInteration: (
       state,
       {
@@ -363,5 +378,6 @@ export const {
   addChat,
   resetChats,
   setVariation,
+  addPostsFromAS
 } = actions;
 export default reducer;

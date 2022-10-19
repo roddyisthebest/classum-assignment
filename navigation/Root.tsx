@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Tab from './Tab';
 import Stack from './Stack';
 import { useDispatch } from 'react-redux';
-import { setName, addChat } from '../store/slice';
+import { setName, addChat,addPostsFromAS } from '../store/slice';
 import {
   collection,
   limit,
@@ -12,12 +12,23 @@ import {
   query,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Nav = createNativeStackNavigator();
 
 const Root = () => {
   const dispatch = useDispatch();
   const q = query(collection(db, 'chats'), orderBy('createdAt'));
+  const getPostData = async() => {
+    try {
+      const valueOfString = await AsyncStorage.getItem('post-value');
+      const value = valueOfString===null?[]:JSON.parse(valueOfString);
+      dispatch(addPostsFromAS(value));
+      
+    } catch (e) {
+      // saving error
+    }
+  }
 
   useEffect(() => {
     const unsubscribe = onSnapshot(q, (snapshot: any) => {
@@ -56,6 +67,10 @@ const Root = () => {
     const random = Math.floor(Math.random() * name.length) + 0;
     dispatch(setName(name[random]));
   }, []);
+
+  useEffect(()=>{
+    getPostData();
+  },[])
 
   return (
     <Nav.Navigator

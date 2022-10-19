@@ -16,7 +16,7 @@ import {
 import { useHeaderHeight } from '@react-navigation/elements';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-import { FileType } from '../types';
+import { FileType,PostDataType } from '../types';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSelector, useDispatch } from 'react-redux';
@@ -25,6 +25,8 @@ import FilePreview from './FilePreview';
 import { addPost, initialStateProps, setVariation } from '../store/slice';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const Upload = ({ type }: { type: 'chat' | 'post' }) => {
   const storage = getStorage();
@@ -191,32 +193,37 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
     const fileteredImages = files.filter((e) => e.type !== 'success');
     const fileteredFiles = files.filter((e) => e.type === 'success');
 
+    const dataWithImages = {
+      title,
+      contents,
+      interest: [user.name],
+      clap: [user.name],
+      data:
+        fileteredImages.length > 0 ? fileteredImages.map((e) => e.uri) : [],
+      dataType: 'images',
+      user,
+    };
+    savePostToAS(dataWithImages);
     dispatch(
-      addPost({
-        title,
-        contents,
-        interest: [user.name],
-        clap: [user.name],
-        data:
-          fileteredImages.length > 0 ? fileteredImages.map((e) => e.uri) : [],
-        dataType: 'images',
-        user,
-      })
+      addPost(dataWithImages)
     );
-
     fileteredFiles.length !== 0 &&
-      fileteredFiles.map((e) =>
+      fileteredFiles.map((e) =>{
+        const dataWithFile = {
+          title: '',
+          contents: '파일업로드',
+          interest: [user.name],
+          clap: [user.name],
+          data: e,
+          dataType: 'file',
+          user,
+        }
+        savePostToAS(dataWithFile)
         dispatch(
-          addPost({
-            title: '',
-            contents: '파일업로드',
-            interest: [user.name],
-            clap: [user.name],
-            data: e,
-            dataType: 'file',
-            user,
-          })
-        )
+          addPost(dataWithFile)
+        );
+
+      }
       );
 
     dispatch(setVariation({ key: 'newPost', value: true }));
@@ -230,6 +237,18 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
     setContents('');
     Keyboard.dismiss();
   };
+
+  const savePostToAS = async(payload:PostDataType) => {
+    try{
+        const valueOfString = await AsyncStorage.getItem('post-value');
+        console.log(valueOfString);
+        const value = valueOfString===null?[]:JSON.parse(valueOfString);
+        value.unshift(payload);
+        await AsyncStorage.setItem('post-value',JSON.stringify(value));
+    }catch(e){
+      console.log(e);
+    }
+  }
 
   return !clicked ? (
     <Pressable
