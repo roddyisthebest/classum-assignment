@@ -22,12 +22,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useSelector, useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FilePreview from './FilePreview';
-import {
-  addChat,
-  addPost,
-  initialStateProps,
-  setVariation,
-} from '../store/slice';
+import { addPost, initialStateProps, setVariation } from '../store/slice';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -72,8 +67,15 @@ const Upload = ({ type }: { type: 'chat' | 'post' }) => {
         quality: 1,
         allowsMultipleSelection: true,
       });
-      if (!result.cancelled) {
-        setFiles((prev) => [...prev, ...result.selected]);
+
+      if (Platform.OS === 'android' && result.selected === undefined) {
+        if (!result.cancelled) {
+          setFiles((prev) => [...prev, result]);
+        }
+      } else {
+        if (!result.cancelled) {
+          setFiles((prev) => [...prev, ...result.selected]);
+        }
       }
     } catch (e) {
       console.log(e);
